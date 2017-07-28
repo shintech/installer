@@ -1,0 +1,14 @@
+{
+  "name": "installer",
+  "version": "0.0.2",
+  "main": "index.js",
+  "repository": "https://github.com/shintech/installer",
+  "author": "Michael Prather",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^2.0.1",
+    "execa": "^0.7.0",
+    "js-yaml": "^3.9.0",
+    "pify": "^3.0.0"
+  }
+}
