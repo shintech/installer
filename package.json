@@ -1,14 +1,40 @@
 {
   "name": "installer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "index.js",
-  "repository": "https://github.com/shintech/installer",
-  "author": "Michael Prather",
   "license": "MIT",
+  "repository":"https://github.com/shintech/installer",
+  "author": "Michael Prather",
+  "scripts": {
+    "start": "node build/server.js"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.23.0",
+    "babel-preset-es2015-node6": "^0.4.0",
+    "babel-preset-latest": "^6.22.0",
+    "standard": "^10.0.2"
+  },
   "dependencies": {
     "chalk": "^2.0.1",
     "execa": "^0.7.0",
     "js-yaml": "^3.9.0",
     "pify": "^3.0.0"
+  },
+  "standard": {
+    "globals": [
+      "it",
+      "describe",
+      "beforeEach",
+      "afterEach",
+      "before",
+      "after",
+      "Backbone",
+      "_",
+      "$"
+    ]
+  },
+  "engines": {
+    "node": ">=6"
   }
 }
+ 
