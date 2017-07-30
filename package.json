@@ -1,9 +1,9 @@
 {
   "name": "installer",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "main": "index.js",
   "license": "MIT",
-  "repository":"https://github.com/shintech/installer",
+  "repository": "https://github.com/shintech/installer",
   "author": "Michael Prather",
   "scripts": {
     "start": "node build/server.js"
@@ -18,7 +18,8 @@
     "chalk": "^2.0.1",
     "execa": "^0.7.0",
     "js-yaml": "^3.9.0",
-    "pify": "^3.0.0"
+    "pify": "^3.0.0",
+    "winston-color": "^1.0.0"
   },
   "standard": {
     "globals": [
@@ -37,4 +38,3 @@
     "node": ">=6"
   }
 }
- 
