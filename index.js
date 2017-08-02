@@ -35,7 +35,7 @@ function getCommand (name, filepath, extension) {
   }
 
   if (extension === 'js') {
-    ext = `HOME=$HOME /usr/local/bin/node ${filepath} $pwd $1`
+    ext = `HOME=$HOME /usr/local/bin/node ${filepath} $(pwd) $1`
   }
 
   return `#!/usr/bin/env bash\n\n#${name}\n\n${ext}\n`
