@@ -1,100 +1,53 @@
-const fs = require('fs')
 const pify = require('pify')
-const yaml = require('js-yaml')
+const fs = pify(require('fs'))
 const execa = require('execa')
 const path = require('path')
 const chalk = require('chalk')
 const logger = require('winston-color')
 const currentDirectory = process.argv[2]
+var filepath = process.argv[3]
 const pathDir = path.join(process.env['HOME'], 'opt', 'bin')
-let config, pkg
+var pkg = path.join(currentDirectory, 'package.json')
 
-if (currentDirectory !== undefined) {
-  pkg = path.join(currentDirectory, 'package.json')
-  config = path.join(currentDirectory, 'version.yml')
-
-  fs.stat(pkg, (err, res) => {
-    if (err && err.path === pkg) {
-      logger.warn('package.json not found...')
-      logger.warn('checking for config.yml...\n')
-      checkForYaml()
-    } else if (!err) {
-      const _package = require(pkg)
-
-      let command = `#!/usr/bin/env bash\n\n#${_package.name} - ${_package.version}\n\nHOME=$HOME /usr/local/bin/node ${currentDirectory}/${_package.main} $(pwd) $1\n`
-
-      logger.info('package.json was found...')
-      logger.info(`installing ${_package.name}...\n`)
-      writeToFile(_package.name, command, _package)
-    } else {
-      logger.error(err)
-    }
-  })
+if (filepath !== undefined) {
+  filepath = path.basename(path.join(currentDirectory, filepath))
+  var filename = filepath.split('.').shift()
+  getMessage(null, filename)
+  writeToFile(filename, getCommand(filename, filepath))
 } else {
-  throw new Error('currentDirectory is undefined...')
-}
-
-function checkForYaml () {
-  try {
-    const v = yaml.safeLoad(fs.readFileSync(config, 'utf8'))
-
-    if (v.name !== undefined) {
-      logger.info('config.yml was found...')
-      logger.info(`installing ${v.name}...\n`)
-
-      let command = `#!/usr/bin/env bash\n\n#${v.name} - ${v.version}\n\nHOME=$HOME /usr/local/bin/node ${currentDirectory}/${v.main} $(pwd) $1\n`
-
-      writeToFile(v.name, command, v)
-    } else {
-      throw new Error('config.name is undefined...')
-    }
-  } catch (err) {
-    handleError(err, config)
-  }
-}
-
-function handleError (err, filename) {
-  if (err && err.path === filename) {
-    let script = `${currentDirectory}/script.sh`
-
-    logger.warn('version.yaml was not found...')
-    logger.warn('checking for script.sh...\n')
-
-    fs.stat(script, (err, res) => {
-      if (err && err.path === script) {
-        logger.error('script.sh not found...')
-        logger.error('aborting...')
-      } else if (!err || err.path !== script) {
-        let name = currentDirectory.split('/')
-
-        const v = {
-          name: name[name.length - 1]
-        }
-
-        logger.info('script.sh was found...')
-        logger.info(`installing ${v.name}...\n`)
-
-        let command = `#!/usr/bin/env bash\n\n#${v.name}\n\nHOME=$HOME /usr/local/bin/node ${script} $(pwd) $1\n`
-        writeToFile(v.name, command, v)
-      } else {
-        logger.error(err)
-      }
-    })
-  } else {
+  fs.stat(pkg).then(() => {
+    const _package = require(pkg)
+    getMessage(pkg, _package.name)
+    writeToFile(_package.name, getCommand(_package.name, _package.main))
+  })
+  .catch(err => {
     logger.error(err)
-  }
-}
-
-function writeToFile (filename, command, v) {
-  pify(fs).writeFile(path.join(pathDir, filename), command)
-  .then(function () {
-    chmod(filename, v)
   })
 }
 
-function chmod (file, v) {
-  execa.shell(`chmod +x ${path.join(pathDir, v.name)}`)
+function getCommand (name, filepath) {
+  return `#!/usr/bin/env bash\n\n#${name}\n\nHOME=$HOME /usr/local/bin/node ${currentDirectory}/${filepath} $(pwd) $1\n`
+}
+
+function getMessage (file, filename) {
+  file ? logger.info(`${chalk.yellow('package.json')} was found...`) : logger.info(`cli argument ${chalk.yellow(filepath)} was provided...`)
+
+  logger.info(`installing ${chalk.green(filename)}...`)
+}
+
+function writeToFile (file, command) {
+  fs.writeFile(path.join(pathDir, file), command)
+  .then(function () {
+    chmod(file)
+  })
+}
+
+function chmod (file, filepath) {
+  execa.shell(`chmod +x ${path.join(pathDir, file)}`)
   .then(() => {
-    logger.info(`successfully installed => ${chalk.green(v.name)}`)
+    logger.info(`successfully installed => ${chalk.green(file)}...`)
+  })
+  .catch(err => {
+    logger.error(err)
   })
 }

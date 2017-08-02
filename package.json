@@ -1,6 +1,6 @@
 {
   "name": "installer",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "repository": "https://github.com/shintech/installer",
@@ -17,7 +17,6 @@
   "dependencies": {
     "chalk": "^2.0.1",
     "execa": "^0.7.0",
-    "js-yaml": "^3.9.0",
     "pify": "^3.0.0",
     "winston-color": "^1.0.0"
   },
