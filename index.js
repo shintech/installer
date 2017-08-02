@@ -4,12 +4,20 @@ const execa = require('execa')
 const path = require('path')
 const chalk = require('chalk')
 const logger = require('winston-color')
-const currentDirectory = process.argv[2]
+var currentDirectory = process.argv[2]
 var filepath = process.argv[3]
 const pathDir = path.join(process.env['HOME'], 'opt', 'bin')
+var pkgCheck
+
+if (filepath) {
+  pkgCheck = filepath.split('/')
+  currentDirectory = pkgCheck.slice(0, pkgCheck.length - 1).join('/')
+  pkgCheck = pkgCheck[pkgCheck.length - 1]
+}
+
 var pkg = path.join(currentDirectory, 'package.json')
 
-if (filepath !== undefined) {
+if (filepath !== undefined && pkgCheck !== 'package.json') {
   var newpath = path.basename(path.join(currentDirectory, filepath))
   var filename = newpath.split('.')
   var extension = filename.pop()
