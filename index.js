@@ -10,23 +10,35 @@ const pathDir = path.join(process.env['HOME'], 'opt', 'bin')
 var pkg = path.join(currentDirectory, 'package.json')
 
 if (filepath !== undefined) {
-  filepath = path.basename(path.join(currentDirectory, filepath))
-  var filename = filepath.split('.').shift()
-  getMessage(null, filename)
-  writeToFile(filename, getCommand(filename, filepath))
+  var newpath = path.basename(path.join(currentDirectory, filepath))
+  var filename = newpath.split('.')
+  var extension = filename.pop()
+
+  getMessage(null, filename[0])
+  writeToFile(filename[0], getCommand(filename[0], filepath, extension))
 } else {
   fs.stat(pkg).then(() => {
     const _package = require(pkg)
     getMessage(pkg, _package.name)
-    writeToFile(_package.name, getCommand(_package.name, _package.main))
+    writeToFile(_package.name, getCommand(_package.name, path.join(currentDirectory, _package.main), 'js'))
   })
   .catch(err => {
     logger.error(err)
   })
 }
 
-function getCommand (name, filepath) {
-  return `#!/usr/bin/env bash\n\n#${name}\n\nHOME=$HOME /usr/local/bin/node ${currentDirectory}/${filepath} $(pwd) $1\n`
+function getCommand (name, filepath, extension) {
+  let ext
+
+  if (extension === 'sh') {
+    ext = `/usr/bin/env bash ${filepath} $1 $2 $3`
+  }
+
+  if (extension === 'js') {
+    ext = `HOME=$HOME /usr/local/bin/node ${filepath} $pwd $1`
+  }
+
+  return `#!/usr/bin/env bash\n\n#${name}\n\n${ext}\n`
 }
 
 function getMessage (file, filename) {
