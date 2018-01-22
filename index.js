@@ -39,11 +39,11 @@ function getCommand (name, filepath, extension) {
   let ext
 
   if (extension === 'sh') {
-    ext = `/usr/bin/env bash ${filepath} $1 $2 $3`
+    ext = `/usr/bin/env bash ${filepath} "\${1}" "\${2}" "\${3}"`
   }
 
   if (extension === 'js') {
-    ext = `HOME=$HOME /usr/local/bin/node ${filepath} $(pwd) $1`
+    ext = `HOME=$HOME /usr/local/bin/node ${filepath} $(pwd) "\${1}"`
   }
 
   return `#!/usr/bin/env bash\n\n#${name}\n\n${ext}\n`

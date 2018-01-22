@@ -1,18 +1,12 @@
 {
   "name": "installer",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "main": "index.js",
   "license": "MIT",
   "repository": "https://github.com/shintech/installer",
   "author": "Michael Prather",
   "scripts": {
     "start": "node build/server.js"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.23.0",
-    "babel-preset-es2015-node6": "^0.4.0",
-    "babel-preset-latest": "^6.22.0",
-    "standard": "^10.0.2"
   },
   "dependencies": {
     "chalk": "^2.0.1",
