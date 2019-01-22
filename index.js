@@ -1,73 +1,80 @@
-const pify = require('pify')
-const fs = pify(require('fs'))
-const execa = require('execa')
+const fs = require("fs")
+const os = require("os")
 const path = require('path')
-const chalk = require('chalk')
-const logger = require('winston-color')
-var currentDirectory = process.argv[2]
-var filepath = process.argv[3]
-const pathDir = path.join(process.env['HOME'], 'opt', 'bin')
-var pkgCheck
+const winston = require('winston')
+const { promisify } = require("util")
 
-if (filepath) {
-  pkgCheck = filepath.split('/')
-  currentDirectory = pkgCheck.slice(0, pkgCheck.length - 1).join('/')
-  pkgCheck = pkgCheck[pkgCheck.length - 1]
+const exists = promisify(fs.exists)
+const writeFile = promisify(fs.writeFile)
+const chmod = promisify(fs.chmod)
+
+const PATH = path.join(process.env['HOME'], 'opt', 'bin')
+const FILEPATH = process.argv[2]
+const HOME = os.homedir()
+const PWD = process.cwd()
+
+const logger = winston.createLogger({
+  transports: [
+    new winston.transports.Console()
+  ],
+
+  format: winston.format.combine(
+    winston.format.colorize(),
+    winston.format.simple()
+  )
+})
+
+async function main () {
+  const pkgExists = await exists(path.join(FILEPATH || PWD, 'package.json'))
+
+  let ext, newPath, filename
+
+  if (FILEPATH !== undefined && !pkgExists) {
+    newPath = path.join(PWD, FILEPATH)
+    ext = path.extname(FILEPATH)
+
+    let split = newPath.split('/')
+
+    filename = path.parse(split[split.length - 1]).name
+  } else if (pkgExists) {
+    const pkg = require(path.join(PWD, 'package.json'))
+
+    newPath = PWD
+    ext = '.js'
+    filename = pkg.name
+  } else {
+    throw new Error('No filepath specified and no package.json found')
+  }
+
+  let command = getCommand(filename, newPath, ext)
+  
+  try {
+    let file = path.join(PATH, filename)
+    
+    logger.info(`Adding ${file} to PATH...`)
+    
+    await writeFile(file, command)
+    await chmod(file, 0755)
+  } catch (err) {
+    throw new Error('Error writing file')
+  }
 }
 
-var pkg = path.join(currentDirectory, 'package.json')
+main()
 
-if (filepath !== undefined && pkgCheck !== 'package.json') {
-  var newpath = path.basename(path.join(currentDirectory, filepath))
-  var filename = newpath.split('.')
-  var extension = filename.pop()
-
-  getMessage(null, filename[0])
-  writeToFile(filename[0], getCommand(filename[0], filepath, extension))
-} else {
-  fs.stat(pkg).then(() => {
-    const _package = require(pkg)
-    getMessage(pkg, _package.name)
-    writeToFile(_package.name, getCommand(_package.name, path.join(currentDirectory, _package.main), 'js'))
-  })
-  .catch(err => {
-    logger.error(err)
-  })
-}
 
 function getCommand (name, filepath, extension) {
-  let ext
+  if (!extension) { throw new Error('File extension not recognized') }
 
-  if (extension === 'sh') {
-    ext = `/usr/bin/env bash ${filepath} "\${1}" "\${2}" "\${3}"`
+  let command
+  
+  if (extension === '.sh') {
+    command = `/usr/bin/env bash ${filepath} "\${1}" "\${2}" "\${3}"`
   }
 
-  if (extension === 'js') {
-    ext = `HOME=$HOME /usr/local/bin/node ${filepath} $(pwd) "\${1}"`
+  if (extension === '.js') {
+    command = `HOME=$HOME /usr/local/bin/node ${filepath} $(pwd) "\${1}"`
   }
 
-  return `#!/usr/bin/env bash\n\n#${name}\n\n${ext}\n`
-}
-
-function getMessage (file, filename) {
-  file ? logger.info(`${chalk.yellow('package.json')} was found...`) : logger.info(`cli argument ${chalk.yellow(filepath)} was provided...`)
-
-  logger.info(`installing ${chalk.green(filename)}...`)
-}
-
-function writeToFile (file, command) {
-  fs.writeFile(path.join(pathDir, file), command)
-  .then(function () {
-    chmod(file)
-  })
-}
-
-function chmod (file, filepath) {
-  execa.shell(`chmod +x ${path.join(pathDir, file)}`)
-  .then(() => {
-    logger.info(`successfully installed => ${chalk.green(file)}...`)
-  })
-  .catch(err => {
-    logger.error(err)
-  })
+  return `#!/usr/bin/env bash\n\n#${name}\n\n${command}\n`
 }
