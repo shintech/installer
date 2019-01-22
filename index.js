@@ -1,16 +1,16 @@
-const fs = require("fs")
-const os = require("os")
+const fs = require('fs')
+const os = require('os')
 const path = require('path')
 const winston = require('winston')
-const { promisify } = require("util")
+const { promisify } = require('util')
 
-const exists = promisify(fs.exists)
+const exists = promisify(fs.stat)
 const writeFile = promisify(fs.writeFile)
 const chmod = promisify(fs.chmod)
 
-const PATH = path.join(process.env['HOME'], 'opt', 'bin')
 const FILEPATH = process.argv[2]
 const HOME = os.homedir()
+const PATH = path.join(HOME, 'opt', 'bin')
 const PWD = process.cwd()
 
 const logger = winston.createLogger({
@@ -24,8 +24,17 @@ const logger = winston.createLogger({
   )
 })
 
+main()
+
 async function main () {
-  const pkgExists = await exists(path.join(FILEPATH || PWD, 'package.json'))
+  let pkgExists
+
+  try {
+    await exists(path.join(FILEPATH || PWD, 'package.json'))
+    pkgExists = true
+  } catch (err) {
+    pkgExists = false
+  }
 
   let ext, newPath, filename
 
@@ -47,27 +56,24 @@ async function main () {
   }
 
   let command = getCommand(filename, newPath, ext)
-  
+
   try {
     let file = path.join(PATH, filename)
-    
+
     logger.info(`Adding ${file} to PATH...`)
-    
+
     await writeFile(file, command)
-    await chmod(file, 0755)
+    await chmod(file, '0755')
   } catch (err) {
     throw new Error('Error writing file')
   }
 }
 
-main()
-
-
 function getCommand (name, filepath, extension) {
   if (!extension) { throw new Error('File extension not recognized') }
 
   let command
-  
+
   if (extension === '.sh') {
     command = `/usr/bin/env bash ${filepath} "\${1}" "\${2}" "\${3}"`
   }
