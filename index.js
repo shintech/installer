@@ -70,7 +70,10 @@ async function main () {
 }
 
 function getCommand (name, filepath, extension) {
-  if (!extension) { throw new Error('File extension not recognized') }
+  if (!extension) { 
+    logger.error(name, filepath, extension)
+    throw new Error('File extension not recognized')
+  }
 
   let command
 
