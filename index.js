@@ -1,7 +1,7 @@
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const winston = require('winston')
+const Shlogger = require("shlogger")
 const { promisify } = require('util')
 const checkIfPackageExists = require('./lib/checkIfPackageExists')
 const getFilenameAndExtension = require('./lib/getFilenameAndExtension')
@@ -16,16 +16,7 @@ const FILEPATH = process.argv[2]
 const HOME = os.homedir()
 const PATH = path.join(HOME, 'opt', 'bin')
 
-const logger = winston.createLogger({
-  transports: [
-    new winston.transports.Console()
-  ],
-
-  format: winston.format.combine(
-    winston.format.colorize(),
-    winston.format.simple()
-  )
-})
+const logger = new Shlogger()
 
 main()
 
